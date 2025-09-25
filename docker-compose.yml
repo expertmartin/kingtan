@@ -1,0 +1,86 @@
+# version: "3.9"
+
+services:
+  # First Spring Boot API
+  api1:
+    build:
+      context: ./api-product
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      # - SPRING_DATASOURCE_URL=jdbc:postgresql://db1:5432/db_product
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://192.168.1.75:5435/db_product
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=hulun
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - db1
+    networks:
+      - app-network
+
+  # Second Spring Boot API
+  api2:
+    build:
+      context: ./api-shoppingcart
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://192.168.1.75:5434/db_shoppingcart
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=hulun
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - db2
+    networks:
+      - app-network
+
+  # PostgreSQL for First API
+  db1:
+    image: postgres
+    environment:
+      - POSTGRES_DB=db_product
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=hulun
+    ports:
+      - "5435:5432"
+    volumes:
+      - db1-data:/var/lib/postgresql/data1
+    networks:
+      - app-network
+
+  # PostgreSQL for Second API
+  db2:
+    image: postgres
+    environment:
+      - POSTGRES_DB=db_shoppingcart
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=hulun
+    ports:
+      - "5434:5432"
+    volumes:
+      - db2-data:/var/lib/postgresql/data2
+    networks:
+      - app-network
+
+  # Angular Frontend
+  angular-app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4203:80"
+    networks:
+      - app-network
+    depends_on:
+      - api1
+      - api2
+
+volumes:
+  db1-data:
+  db2-data:
+
+networks:
+  app-network:
+    driver: bridge
