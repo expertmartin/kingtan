@@ -1,0 +1,49 @@
+spring:
+  application:
+  name: users
+
+########### Postgres Begin ###################
+  datasource:
+    url: jdbc:postgresql://192.168.1.75:5432/db_users
+    username: postgres
+    password: hulun
+    driver-class-name: org.postgresql.Driver
+
+##### JPA/Hibernate configuration
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        ddl-auto: update
+    show-sql: true
+
+##### Enable to run sql script, such as schema.sql and dada.sql
+  sql:
+    init:
+      mode: always
+
+##### Email configuration
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: kingtan.farm@gmail.com
+    password: fcnc$30n
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  
+##### JWT configuration (for authentication)
+app:
+  jwt:
+    secret: tanyuanwodixinganerwoainiwoxiangrinidebitiannidebizairiyicicaonide1meilide1mapismshzainenggenniriyicimapitnayuanninameilidemapi
+    expiration: 86400000
+
+springdoc:
+  api-docs:
+    path: /api-docs  # Endpoint for OpenAPI JSON
+  swagger-ui:
+    path: /swagger-ui.html  # Swagger UI endpoint
