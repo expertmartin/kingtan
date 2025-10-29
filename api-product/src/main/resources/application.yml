@@ -1,3 +1,56 @@
 spring:
   application:
     name: product
+#  profiles:
+#    active: dev
+
+    ########### PostgreSQL ###########
+    datasource:
+      url: jdbc:postgresql://192.168.1.75:5438/db_product
+      username: postgres
+      password: hulun
+      driver-class-name: org.postgresql.Driver
+
+    ########## JPA/Hibernate configuration ##########
+    jpa:
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.PostgreSQLDialect
+          format_sql: true
+          ddl-auto: create
+      show-sql: true
+
+  ########## Enable to run sql script, such as schema.sql and dada.sql
+  sql:
+    init:
+      mode: always
+
+  ########## MongoDB ##########
+  data:
+    mongodb:
+      uri: mongodb://admin:hulun@localhost:27018/productdb?authSource=admin
+      database: productdb
+
+  ########## Kafka ##########
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+########## Spring OpenAPI (Swagger) ##########
+springdoc:
+  api-docs:
+    path: /api-docs  # Endpoint for OpenAPI JSON
+  swagger-ui:
+    path: /swagger-ui.html  # Swagger UI endpoint
+
+########## Server Port ##########
+server:
+  port: 8883
+
+logging:
+  level:
+    org.springframework: DEBUG
+    com.zaxxer.hikari: DEBUG
+    org.springframework.boot.context.config: DEBUG
