@@ -4,31 +4,10 @@ spring:
 #  profiles:
 #    active: dev
 
-    ########### PostgreSQL ###########
-    datasource:
-      url: jdbc:postgresql://192.168.1.75:5438/db_product
-      username: postgres
-      password: hulun
-      driver-class-name: org.postgresql.Driver
-
-    ########## JPA/Hibernate configuration ##########
-    jpa:
-      properties:
-        hibernate:
-          dialect: org.hibernate.dialect.PostgreSQLDialect
-          format_sql: true
-          ddl-auto: create
-      show-sql: true
-
-  ########## Enable to run sql script, such as schema.sql and dada.sql
-  sql:
-    init:
-      mode: always
-
-  ########## MongoDB ##########
   data:
     mongodb:
       uri: mongodb://admin:hulun@localhost:27018/productdb?authSource=admin
+#      uri: mongodb://queen:27018/productdb?authSource=admin
       database: productdb
 
   ########## Kafka ##########

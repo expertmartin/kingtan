@@ -1,8 +1,0 @@
-
-  -- Products table
-  CREATE TABLE IF NOT EXISTS products (
-      ID VARCHAR(50) PRIMARY KEY,
-      NAME VARCHAR(50) UNIQUE NOT NULL,
-      PRICE NUMERIC(10,2) NULL,
-      STOCK INTEGER NULL
-  );
