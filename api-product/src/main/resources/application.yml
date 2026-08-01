@@ -25,8 +25,8 @@ springdoc:
     path: /swagger-ui.html  # Swagger UI endpoint
 
 ########## Server Port ##########
-server:
-  port: 8883
+# server:
+#   port: 8883
 
 logging:
   level:

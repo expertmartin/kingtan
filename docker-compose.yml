@@ -1,57 +1,82 @@
 # version: "3.9"
 
 services:
-  # First Spring Boot API
-  api1:
+  # Spring Boot API api-product
+  api-product:
     build:
       context: ./api-product
       dockerfile: Dockerfile
     ports:
       - "8081:8080"
     environment:
-      # - SPRING_DATASOURCE_URL=jdbc:postgresql://db1:5432/db_product
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://192.168.1.75:5435/db_product
+      # MongoDB Settings
+      MONGO_URI: mongodb://admin:password@mongodb:27017/mydatabase?authSource=admin
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+      MONGO_USER: admin
+      MONGO_PASSWORD: password
+      MONGO_DATABASE: mydatabase
+
+      # Kafka Settings
+      KAFKA_BOOTSTRAP_SERVERS: kafka-product:29092
+      KAFKA_HOST: kafka-product
+      KAFKA_PORT: 29092
+    depends_on:
+      - mongo-product
+      - kafka-product
+    networks:
+      - app-network
+
+  # Spring Boot API api-users
+  api-users:
+    build:
+      context: ./api-users
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://192.168.1.75:5435/db_users
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=hulun
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     depends_on:
-      - db1
+      - pg-users
     networks:
       - app-network
 
-  # Second Spring Boot API
-  api2:
+  # Spring Boot API api-shoppingcart
+  api-shoppingcart:
     build:
       context: ./api-shoppingcart
       dockerfile: Dockerfile
     ports:
-      - "8082:8080"
+      - "8083:8080"
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://192.168.1.75:5434/db_shoppingcart
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=hulun
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     depends_on:
-      - db2
+      - pg-shoppingcart
     networks:
       - app-network
 
-  # PostgreSQL for First API
-  db1:
+  # PostgreSQL for First api-users
+  pg-users:
     image: postgres
     environment:
-      - POSTGRES_DB=db_product
+      - POSTGRES_DB=db_users
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=hulun
     ports:
       - "5435:5432"
     volumes:
-      - db1-data:/var/lib/postgresql/data1
+      - pg-users-data:/var/lib/postgresql/data1
     networks:
       - app-network
 
-  # PostgreSQL for Second API
-  db2:
+  # PostgreSQL for Second api-shoppingcart
+  pg-shoppingcart:
     image: postgres
     environment:
       - POSTGRES_DB=db_shoppingcart
@@ -60,9 +85,59 @@ services:
     ports:
       - "5434:5432"
     volumes:
-      - db2-data:/var/lib/postgresql/data2
+      - pg-shoppingcart-data:/var/lib/postgresql/data2
     networks:
       - app-network
+
+# MongoDB Service for api-product
+  mongo-product:
+    image: mongo:8.0   # Latest stable version (or use 7.0 / 6.0 if needed)
+    container_name: mongo-product
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: hulun
+      MONGO_INITDB_DATABASE: productdb
+    volumes:
+      - mongodb-data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro   # Optional init script
+    command: ["mongod", "--auth"]   # Enable authentication
+
+# Kafka and Zookeeper Services for api-product
+# Zookeeper configuration
+  zookeeper-product:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: zookeeper-product
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - kafka-network
+
+# Kafka configuration
+  kafka-product:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka-product
+    depends_on:
+      - zookeeper-product
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-product:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-product:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_OPTS: -XX:-UseContainerSupport
+    networks:
+      - kafka-network
 
   # Angular Frontend
   angular-app:
@@ -74,13 +149,20 @@ services:
     networks:
       - app-network
     depends_on:
-      - api1
-      - api2
+      - api-product
+      - api-users
+      - api-shoppingcart
 
 volumes:
-  db1-data:
-  db2-data:
+  pg-users-data:
+    driver: local
+  pg-shoppingcart-data:
+    driver: local
+  mongodb-data:
+    driver: local
 
 networks:
   app-network:
+    driver: bridge
+  kafka-network:
     driver: bridge
